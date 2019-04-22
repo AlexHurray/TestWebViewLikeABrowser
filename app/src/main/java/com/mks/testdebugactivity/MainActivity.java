@@ -37,9 +37,14 @@ public class MainActivity extends AppCompatActivity {
             int start = i * maxLogSize;
             int end = (i+1) * maxLogSize;
             end = end > str.length() ? str.length() : end;
-            Log.e("111", str.substring(start, end));
+            Log.e("!!!", str.substring(start, end));
         }
     }
+
+    static class Wrapper {
+        boolean first = true;
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         String url = getIntent().getStringExtra(KEY_URL);
         if (url == null) {
             //url = "https://yandex.ru/search/?lr=213&text=%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%B8%D1%82%D1%8C%20referer%20%D0%BE%D0%BD%D0%BB%D0%B0%D0%B9%D0%BD";
-            url = "http://am.mks.group/api_test";
+            url = "http://amediateka.org/lp/4305";
         }
 
         WebSettings settings = webView.getSettings();
@@ -61,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
         String ua = "Mozilla/5.0 (Android; Tablet; rv:20.0) Gecko/20.0 Firefox/20.0";
 
         settings.setUserAgentString(ua);
+        final Wrapper wrapper = new Wrapper();
 
         webView.setWebViewClient(new WebViewClient() {
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -71,16 +77,27 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (!wrapper.first) {
+                    log("shouldOverrideUrlLoading URL = " + url);
+                    return true;
+                }
+
                 return false;
             }
 
             public void onPageFinished(WebView view, String url) {
                // webView.loadUrl("javascript:document.getElementsByTagName('li')[2].getElementsByTagName('h2')[0].click()");
 
-                /*Map<String, String> extraHeaders = new HashMap<String, String>();
-                extraHeaders.put("Referer", "http://elari.net");*/
+                if (wrapper.first) {
+                    Map<String, String> extraHeaders = new HashMap<String, String>();
+                    extraHeaders.put("Referer", "http://elari.net");
+                    extraHeaders.put("X-Requested-With", "");
 
-                //webView.loadUrl("javascript:document.querySelector(\"a[href='http://whatsmyreferer.com/']\").click()", extraHeaders);
+                    webView.loadUrl("javascript:document.getElementById('ButtonSubmit').click()", extraHeaders);
+                    wrapper.first = false;
+                } else {
+                    log("URL = " + url);
+                }
             }
 
             public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
